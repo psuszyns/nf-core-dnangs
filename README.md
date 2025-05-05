@@ -19,48 +19,48 @@
 
 ## Introduction
 
-**nf-core/dnangs** is a bioinformatics pipeline that ...
+**nf-core/dnangs** an exa ple bioinformatics pipeline for MBI lecture
 
-<!-- TODO nf-core:
-   Complete this sentence with a 2-3 sentence summary of what types of data the pipeline ingests, a brief overview of the
-   major pipeline sections and the types of output it produces. You're giving an overview to someone new
-   to nf-core here, in 15-20 seconds. For an example, see https://github.com/nf-core/rnaseq/blob/master/README.md#introduction
--->
+This repository was created with
+```
+nf-core pipelines create --name dnangs --author "Piotr Suszyński" --description "Example workflow"
+cd nf-core-dnangs/
+nf-core subworkflows install fastq_align_bwa
+nf-core modules install gatk4/haplotypecaller
+```
 
-<!-- TODO nf-core: Include a figure that guides the user through the major workflow steps. Many nf-core
-     workflows use the "tube map" design for that. See https://nf-co.re/docs/contributing/design_guidelines#examples for examples.   -->
-<!-- TODO nf-core: Fill in short bullet-pointed list of the default steps in the pipeline -->1. Read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))2. Present QC for raw reads ([`MultiQC`](http://multiqc.info/))
+The example data can be collected using:
+```
+mkdir -P example_data/ref
+cd example_data/ref
+wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr1.fa.gz
+gunzip chr1.fa.gz
+mv chr1.fa ref.fa
+podman run -v $PWD:/data:Z -w /data quay.io/biocontainers/bwa:0.7.17--hed695b0_7 bwa index -p /data/ref_bwa_index /data/ref.fa
+podman run -v $PWD:/data:Z -w /data biocontainers/samtools:v1.9-4-deb_cv1 samtools dict /data/ref.fa -o /data/ref.dict
+cd ..
+# download coriell_chr1.fq.gz from https://drive.google.com/file/d/1UU2IlgQ58TerqkZglASchab5Iu9_kSKQ/view?usp=sharing
+echo "sample,fastq_1,fastq_2" > samplesheet.csv 
+echo "coriell_chr1,example_data/coriell_chr1.fq.gz,example_data/coriell_chr1.fq.gz" >> samplesheet.csv
+```
+
+The code presented at the lecture was placed in workflows/dnangs.nf (lines 20-21, 42-63, 83-108) as well as a few lines in conf/modules.config and nextflow.config. All the other code in this repository (including portions of this README file) was generated when the new project was generated (`nf-core pipelines create`) or downloded by nf-core as part of modules/subworflows installation.
 
 ## Usage
 
 > [!NOTE]
 > If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/usage/installation) on how to set-up Nextflow. Make sure to [test your setup](https://nf-co.re/docs/usage/introduction#how-to-run-a-pipeline) with `-profile test` before running the workflow on actual data.
 
-<!-- TODO nf-core: Describe the minimum required steps to execute the pipeline, e.g. how to prepare samplesheets.
-     Explain what rows and columns represent. For instance (please edit as appropriate):
 
-First, prepare a samplesheet with your input data that looks as follows:
-
-`samplesheet.csv`:
-
-```csv
-sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
-```
-
-Each row represents a fastq file (single-end) or a pair of fastq files (paired end).
-
--->
-
-Now, you can run the pipeline using:
-
-<!-- TODO nf-core: update the following command to include all required parameters for a minimal example -->
+You can run the pipeline using:
 
 ```bash
-nextflow run nf-core/dnangs \
-   -profile <docker/singularity/.../institute> \
-   --input samplesheet.csv \
-   --outdir <OUTDIR>
+nextflow run . \
+  --reads 'example_data/coriell_chr1.fq.gz' \
+  --input 'example_data/samplesheet.csv' \
+  --bwa_index 'example_data/ref/ref_bwa_index.{amb,ann,bwt,pac,sa}' \
+  --outdir 'example_data/results' \
+  -profile podman
 ```
 
 > [!WARNING]
